@@ -1,0 +1,266 @@
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <algorithm>
+#include <vector>
+
+using namespace std;
+
+const int MAX_EMPLOYEES = 100;
+
+struct Employee {
+    int id;
+    string name;
+    string position;
+    string type; // Full-time, Part-time, Contract
+    string startDate;
+    double basicSalary;
+    double hourlyWage;
+    double totalHours;
+    int leaveDays;
+    double overtimeHours;
+};
+
+Employee employees[MAX_EMPLOYEES];
+int employeeCount = 0;
+
+// Find employee index by ID
+int findEmployeeById(int id) {
+    for (int i = 0; i < employeeCount; ++i) {
+        if (employees[i].id == id)
+            return i;
+    }
+    return -1;
+}
+
+// Insert new employee
+void insertEmployee() {
+    if (employeeCount >= MAX_EMPLOYEES) {
+        cout << "Employee limit reached!\n";
+        return;
+    }
+
+    Employee emp;
+    cout << "\nEnter Employee ID: ";
+    cin >> emp.id;
+    cin.ignore();
+
+    if (findEmployeeById(emp.id) != -1) {
+        cout << "Employee ID already exists!\n";
+        return;
+    }
+
+    cout << "Enter Name: ";
+    getline(cin, emp.name);
+
+    cout << "Enter Position (Teacher, Administrator, Janitor, Librarian): ";
+    getline(cin, emp.position);
+
+    cout << "Enter Employee Type (Full-time, Part-time, Contract): ";
+    getline(cin, emp.type);
+
+    cout << "Enter Start Date (e.g., 2024-09-01): ";
+    getline(cin, emp.startDate);
+
+    cout << "Enter Basic Salary: $";
+    cin >> emp.basicSalary;
+
+    cout << "Enter Hourly Wage: $";
+    cin >> emp.hourlyWage;
+
+    cout << "Enter Total Working Hours: ";
+    cin >> emp.totalHours;
+
+    cout << "Enter Leave Days Taken: ";
+    cin >> emp.leaveDays;
+
+    cout << "Enter Overtime Hours: ";
+    cin >> emp.overtimeHours;
+
+    employees[employeeCount++] = emp;
+
+    cout << "Employee inserted successfully!\n";
+}
+
+// Update employee data
+void updateEmployee() {
+    int id;
+    cout << "\nEnter Employee ID to Update: ";
+    cin >> id;
+    cin.ignore();
+
+    int index = findEmployeeById(id);
+    if (index == -1) {
+        cout << "Employee not found!\n";
+        return;
+    }
+
+    cout << "Updating data for " << employees[index].name << ":\n";
+
+    Employee& emp = employees[index];
+    cout << "Enter New Name: ";
+    getline(cin, emp.name);
+
+    cout << "Enter New Position: ";
+    getline(cin, emp.position);
+
+    cout << "Enter New Employee Type: ";
+    getline(cin, emp.type);
+
+    cout << "Enter New Start Date: ";
+    getline(cin, emp.startDate);
+
+    cout << "Enter New Basic Salary: $";
+    cin >> emp.basicSalary;
+
+    cout << "Enter New Hourly Wage: $";
+    cin >> emp.hourlyWage;
+
+    cout << "Enter New Total Working Hours: ";
+    cin >> emp.totalHours;
+
+    cout << "Enter New Leave Days Taken: ";
+    cin >> emp.leaveDays;
+
+    cout << "Enter New Overtime Hours: ";
+    cin >> emp.overtimeHours;
+
+    cout << "Employee updated successfully!\n";
+}
+
+// Calculate salary
+double calculateSalary(Employee emp) {
+    double bonus = 0;
+
+    if (emp.leaveDays == 0) bonus = 150;
+    else if (emp.leaveDays == 1) bonus = 100;
+    else if (emp.leaveDays == 2) bonus = 50;
+
+    double dailyWage = emp.basicSalary / 30.0;
+    double overtimePay = emp.overtimeHours * dailyWage * 2.0;
+
+    double grossSalary = emp.basicSalary + bonus + overtimePay;
+
+    if (emp.leaveDays > 4 && emp.overtimeHours > 0) {
+        grossSalary -= grossSalary * 0.01;
+    }
+
+    double tax = grossSalary * 0.02;
+    double netSalary = grossSalary - tax - 10; // $10 social security
+
+    return netSalary;
+}
+
+// Counting sort for net salaries
+void enhancedCountingSort(vector<double>& arr) {
+    if (arr.empty()) return;
+
+    vector<int> scaledArr(arr.size());
+    for (int i = 0; i < arr.size(); ++i)
+        scaledArr[i] = static_cast<int>(arr[i] * 100);
+
+    int minVal = *min_element(scaledArr.begin(), scaledArr.end());
+    int maxVal = *max_element(scaledArr.begin(), scaledArr.end());
+    int range = maxVal - minVal + 1;
+
+    vector<int> count(range, 0);
+    for (int val : scaledArr)
+        count[val - minVal]++;
+
+    int index = 0;
+    for (int i = 0; i < range; i++) {
+        while (count[i]-- > 0)
+            scaledArr[index++] = i + minVal;
+    }
+
+    for (int i = 0; i < arr.size(); ++i)
+        arr[i] = scaledArr[i] / 100.0;
+}
+
+// Display all employee info
+void viewEmployees(bool sortBySalary = false) {
+    if (employeeCount == 0) {
+        cout << "\nNo employees found!\n";
+        return;
+    }
+
+    if (!sortBySalary) {
+        cout << "\n--- Employee Records (Unsorted) ---\n";
+        for (int i = 0; i < employeeCount; ++i) {
+            Employee& emp = employees[i];
+            double salary = calculateSalary(emp);
+            cout << "\nID: " << emp.id;
+            cout << "\nName: " << emp.name;
+            cout << "\nPosition: " << emp.position;
+            cout << "\nType: " << emp.type;
+            cout << "\nStart Date: " << emp.startDate;
+            cout << "\nBasic Salary: $" << fixed << setprecision(2) << emp.basicSalary;
+            cout << "\nHourly Wage: $" << emp.hourlyWage;
+            cout << "\nTotal Working Hours: " << emp.totalHours;
+            cout << "\nLeave Days: " << emp.leaveDays;
+            cout << "\nOvertime Hours: " << emp.overtimeHours;
+            cout << "\nNet Salary: $" << fixed << setprecision(2) << salary;
+            cout << "\n-----------------------------\n";
+        }
+    } else {
+        vector<double> netSalaries;
+        for (int i = 0; i < employeeCount; ++i) {
+            netSalaries.push_back(calculateSalary(employees[i]));
+        }
+
+        enhancedCountingSort(netSalaries);
+
+        cout << "\n--- Employee Records (Sorted by Net Salary) ---\n";
+        for (double sortedSalary : netSalaries) {
+            for (int i = 0; i < employeeCount; ++i) {
+                double currentSalary = calculateSalary(employees[i]);
+                if (abs(currentSalary - sortedSalary) < 0.01) {
+                    Employee& emp = employees[i];
+                    cout << "\nID: " << emp.id;
+                    cout << "\nName: " << emp.name;
+                    cout << "\nPosition: " << emp.position;
+                    cout << "\nType: " << emp.type;
+                    cout << "\nStart Date: " << emp.startDate;
+                    cout << "\nBasic Salary: $" << fixed << setprecision(2) << emp.basicSalary;
+                    cout << "\nHourly Wage: $" << emp.hourlyWage;
+                    cout << "\nTotal Working Hours: " << emp.totalHours;
+                    cout << "\nLeave Days: " << emp.leaveDays;
+                    cout << "\nOvertime Hours: " << emp.overtimeHours;
+                    cout << "\nNet Salary: $" << fixed << setprecision(2) << currentSalary;
+                    cout << "\n-----------------------------\n";
+                    break;
+                }
+            }
+        }
+    }
+}
+
+// Main menu
+void showMenu() {
+    int choice;
+    do {
+        cout << "\n---- School Staff Management System ----";
+        cout << "\n1. Insert Employee";
+        cout << "\n2. Update Employee";
+        cout << "\n3. View All Employees (Unsorted)";
+        cout << "\n4. View Employees Sorted by Net Salary";
+        cout << "\n5. Exit";
+        cout << "\nEnter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1: insertEmployee(); break;
+            case 2: updateEmployee(); break;
+            case 3: viewEmployees(false); break;
+            case 4: viewEmployees(true); break;
+            case 5: cout << "Exiting...\n"; break;
+            default: cout << "Invalid choice. Try again!\n";
+        }
+    } while (choice != 5);
+}
+
+int main() {
+    showMenu();
+    return 0;
+}
+
